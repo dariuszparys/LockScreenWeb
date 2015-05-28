@@ -1,0 +1,54 @@
+﻿<div class="jumbotron">
+    <h1>Lock Screen</h1>
+    <p>This web app is demonstrating the use of local Windows 10 API's when packaged inside an .appx</p>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <h2>Select your local picture</h2>
+        <p>
+            Just click the button and the file picker will open. If you're not running inside a Windows 10 app
+            with full Windows Runtime access you'll just be prompted by an alert.
+        </p>
+        <p><button id="action">Open File Picker</button></p>
+    </div>
+    <div class="col-md-8">
+        <h2>Your selected image</h2>
+        <p>The image you selected will be displayed here and will also be placed on your lock screen!</p>
+        <p><img id="picture" src="#" style="visibility: hidden" height="360" /></p>
+    </div>
+</div>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        $("#action").click(function () {
+            if (window.Windows) {
+                console.log("we're on windows 10");
+                var picker = new Windows.Storage.Pickers.FileOpenPicker();
+                picker.viewMode = Windows.Storage.Pickers.PickerViewMode.thumbnail;
+                picker.suggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.picturesLibrary;
+                picker.fileTypeFilter.replaceAll([".jpg", ".jpeg", ".png", ".bmp"]);
+
+                picker.pickSingleFileAsync().done(function (file) {
+                    if (file) {
+                        // Application now has read/write access to the picked file, setting image to lockscreen.
+                        Windows.System.UserProfile.LockScreen.setImageFileAsync(file).done(function (imageSet) {
+                            console.log && console.log("File \"" + file.name + "\" set as lock screen image.", "sample", "status");
+                            $("#picture").get(0).src = URL.createObjectURL(file, { oneTimeOnly: true });
+                            $("#picture").css("visibility", "visible");
+                        },
+                        function (imageSet) {
+                            // Set Image promise failed.  Display failure message.
+                            console.log && console.log("Setting the lock screen image failed.  Make sure your copy of Windows is activated.", "sample", "error");
+                        });
+                    }
+                    else {
+                        console.log && console.log("No file was selected using the picker.", "sample", "error");
+                    }
+                });
+            } else {
+                alert("This is the web, what do you expect?");
+            }
+        });
+    });
+</script>
